@@ -5,26 +5,83 @@ import Temperature from "./components/DataComponents/Temperature";
 import Connectivity from "./components/DataComponents/Connectivity";
 import Equipment from "./components/DataComponents/Equipment";
 import * as mqtt from "mqtt/dist/mqtt";
+import { useCallback, useEffect, useState } from "react";
 
 function App() {
   const client = mqtt.connect("ws://localhost:8883");
 
+  const [linkageEnabled, setLinkageEnabled] = useState(false);
+
+  const sendUpdate = useCallback(
+    (topic: string, status: Partial<"on" | "off" | "start" | "stop">) =>
+      client.publish(topic, status, { qos: 1 }, (err) => {
+        if (err) {
+          console.error("Error publishing message:", err);
+        }
+      }),
+    [client]
+  );
+
+  const handleLinkageControl = () => {
+    setLinkageEnabled((prevEnabled) => !prevEnabled);
+  };
+
+  useEffect(() => {
+    const handleIlluminationControl = (illumination: number) => {
+      if (linkageEnabled) {
+        if (illumination < 300) {
+          sendUpdate("greenhouse/fill-light", "on");
+        } else if (illumination > 1000) {
+          sendUpdate("greenhouse/fill-light", "off");
+        }
+      }
+    };
+
+    const handleSoilMoistureControl = (moisture: number) => {
+      if (linkageEnabled) {
+        if (moisture < 30) {
+          sendUpdate("greenhouse/sprinkler", "start");
+        } else if (moisture > 60) {
+          sendUpdate("greenhouse/sprinkler", "stop");
+        }
+      }
+    };
+    if (client) {
+      if (linkageEnabled) {
+        client.subscribe("greenhouse/control", (error) => {
+          if (error) {
+            console.log("Subscribe to topics error", error);
+          }
+        });
+
+        client.on("message", (topic, message) => {
+          const { illumination, soilMoisture } = JSON.parse(message.toString());
+
+          handleIlluminationControl(illumination);
+          handleSoilMoistureControl(soilMoisture);
+        });
+      } else {
+        client.unsubscribe("greenhouse/control");
+      }
+    }
+  }, [client, linkageEnabled, sendUpdate]);
+
   return (
-    <Paper className="App">
+    <Paper className="App" sx={{ bg: "transparent" }}>
       <header className="App-header">
         <h1>Greenhouse Monitoring</h1>
         <Button
-          variant="outlined"
+          variant="contained"
+          onClick={handleLinkageControl}
           sx={{
-            color: "white",
-            borderColor: "white",
-            margin: 1,
+            m: 1,
           }}
+          color={linkageEnabled ? "success" : "primary"}
         >
-          Linkage Control 
+          {linkageEnabled ? "Linkage Control On" : "Linkage Control Off"}
         </Button>
       </header>
-      <Grid container spacing={2} direction="row" p={1}>
+      <Grid container spacing={2} direction="row" p={1} color="transparent">
         <Grid item xs={2}>
           <Card elevation={3}>
             <Skeleton

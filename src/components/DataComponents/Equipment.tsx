@@ -31,18 +31,43 @@ const Equipment = ({ client }: MQTTProps) => {
 
   useEffect(() => {
     if (client) {
-      client.subscribe("greenhouse/equipment", (error) => {
-        if (error) {
-          console.log("Subscribe to topics error", error);
+      client.subscribe(
+        ["greenhouse/equipment", "greenhouse/control"],
+        (error) => {
+          if (error) {
+            console.log("Subscribe to topics error", error);
+          }
         }
+      );
+
+      client.on("message", (topic, message) => {
+        console.log(topic, message);
+        for (const m in JSON.parse(message.toString())) {
+          console.log(m);
+          switch (m) {
+            case "on":
+              setIsLightOn(true);
+              break;
+            case "off":
+              setIsLightOn(false);
+              break;
+            case "start":
+              setIsSprintlerOn(true);
+              break;
+            case "stop":
+              setIsSprintlerOn(false);
+              break;
+          }
+        }
+        // sendUpdate("greenhouse/temperature", isSensorOn);
       });
 
-      // client.on("message", (topic, message) => {
-      //   sendUpdate("greenhouse/equipment/sprintler", isSprintlerOn);
-      //   sendUpdate("greenhouse/equipment/light", isLightOn);
-      //   sendUpdate("greenhouse/equipment/fan", isFanOn);
-      //   sendUpdate("greenhouse/equipment/heater", isHeaterOn);
-      // });
+      client.on("message", (topic, message) => {
+        sendUpdate("greenhouse/equipment/sprintler", isSprintlerOn);
+        sendUpdate("greenhouse/equipment/light", isLightOn);
+        sendUpdate("greenhouse/equipment/fan", isFanOn);
+        sendUpdate("greenhouse/equipment/heater", isHeaterOn);
+      });
     }
   }, [client, isFanOn, isHeaterOn, isLightOn, isSprintlerOn, sendUpdate]);
 

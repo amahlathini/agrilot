@@ -35,9 +35,11 @@ const Temperature = ({ client }: MQTTProps) => {
 
       client.on("message", (topic, message) => {
         setTemperature(
-          isSensorOn &&   client.connected ? JSON.parse(message.toString())?.temperature : 0
+          isSensorOn && client.connected
+            ? JSON.parse(message.toString())?.temperature
+            : 0
         );
-        // sendUpdate("greenhouse/temperature", isSensorOn);
+        sendUpdate("greenhouse/temperature", isSensorOn);
       });
     }
   }, [client, isSensorOn, sendUpdate]);
@@ -63,7 +65,7 @@ const Temperature = ({ client }: MQTTProps) => {
             subArcs: [
               {
                 limit: 15,
-                color: "#EA4228",
+                color: "#ffffff",
                 showTick: true,
                 tooltip: {
                   text: "Too low temperature!",
@@ -76,7 +78,7 @@ const Temperature = ({ client }: MQTTProps) => {
               },
               {
                 limit: 17,
-                color: "#F5CD19",
+                color: "#ffff99",
                 showTick: true,
                 tooltip: {
                   text: "Low temperature!",
@@ -84,7 +86,7 @@ const Temperature = ({ client }: MQTTProps) => {
               },
               {
                 limit: 28,
-                color: "#5BE12C",
+                color: "#ffcc33",
                 showTick: true,
                 tooltip: {
                   text: "OK temperature!",
@@ -92,14 +94,14 @@ const Temperature = ({ client }: MQTTProps) => {
               },
               {
                 limit: 30,
-                color: "#F5CD19",
+                color: "#ee6600",
                 showTick: true,
                 tooltip: {
                   text: "High temperature!",
                 },
               },
               {
-                color: "#EA4228",
+                color: "#990000",
                 tooltip: {
                   text: "Too high temperature!",
                 },
@@ -119,7 +121,7 @@ const Temperature = ({ client }: MQTTProps) => {
               defaultTickValueConfig: {
                 formatTextValue: (value) => value + "ºC",
                 maxDecimalDigits: 2,
-                style: { fontSize: 2 },
+                style: { fontSize: 2, color: "black", background: "black" },
               },
               ticks: [{ value: 13 }, { value: 22.5 }, { value: 32 }],
             },

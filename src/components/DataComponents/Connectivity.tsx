@@ -80,7 +80,7 @@ const Connectivity = ({ client }: MQTTProps) => {
                   setIsConnected(checked);
                   sendUpdate("greenhouse/connectivity", checked);
                   if (checked && client.disconnected) {
-                    client.reconnect();
+                    client.connect();
                   }
                 }}
               />
